@@ -1,0 +1,124 @@
+/* Base dark theme stylesheet for the extension */
+/* Applied when html.dmx-dark-mode class is present */
+
+html.dmx-dark-mode,
+html.dmx-dark-mode body {
+  background-color: #121212 !important;
+  color: #e0e0e0 !important;
+}
+
+html.dmx-dark-mode body {
+  background-color: #121212 !important;
+}
+
+/* Links */
+html.dmx-dark-mode a {
+  color: #90caf9 !important;
+}
+
+html.dmx-dark-mode a:visited {
+  color: #ce93d8 !important;
+}
+
+html.dmx-dark-mode a:hover {
+  color: #64b5f6 !important;
+}
+
+/* Headings */
+html.dmx-dark-mode h1,
+html.dmx-dark-mode h2,
+html.dmx-dark-mode h3,
+html.dmx-dark-mode h4,
+html.dmx-dark-mode h5,
+html.dmx-dark-mode h6 {
+  color: #ffffff !important;
+}
+
+/* Common containers */
+html.dmx-dark-mode header,
+html.dmx-dark-mode nav,
+html.dmx-dark-mode main,
+html.dmx-dark-mode footer,
+html.dmx-dark-mode section,
+html.dmx-dark-mode article,
+html.dmx-dark-mode div {
+  /* Base styles - individual elements will be adjusted by JS */
+}
+
+/* Form elements */
+html.dmx-dark-mode input[type="text"],
+html.dmx-dark-mode input[type="email"],
+html.dmx-dark-mode input[type="password"],
+html.dmx-dark-mode input[type="search"],
+html.dmx-dark-mode input[type="url"],
+html.dmx-dark-mode textarea,
+html.dmx-dark-mode select {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+  border-color: #424242 !important;
+}
+
+html.dmx-dark-mode input[type="button"],
+html.dmx-dark-mode input[type="submit"],
+html.dmx-dark-mode button {
+  background-color: #424242 !important;
+  color: #e0e0e0 !important;
+  border-color: #616161 !important;
+}
+
+html.dmx-dark-mode input[type="button"]:hover,
+html.dmx-dark-mode input[type="submit"]:hover,
+html.dmx-dark-mode button:hover {
+  background-color: #616161 !important;
+}
+
+/* Code blocks */
+html.dmx-dark-mode code,
+html.dmx-dark-mode pre {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+/* Tables */
+html.dmx-dark-mode table {
+  border-color: #424242 !important;
+}
+
+html.dmx-dark-mode th,
+html.dmx-dark-mode td {
+  border-color: #424242 !important;
+}
+
+html.dmx-dark-mode th {
+  background-color: #1e1e1e !important;
+  color: #e0e0e0 !important;
+}
+
+/* Scrollbars (WebKit browsers) */
+html.dmx-dark-mode ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+html.dmx-dark-mode ::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+html.dmx-dark-mode ::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 6px;
+}
+
+html.dmx-dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #616161;
+}
+
+/* Do NOT invert images, videos, or canvas */
+html.dmx-dark-mode img,
+html.dmx-dark-mode video,
+html.dmx-dark-mode picture,
+html.dmx-dark-mode canvas,
+html.dmx-dark-mode svg {
+  /* No filters or inversions - preserve original appearance */
+}
+
