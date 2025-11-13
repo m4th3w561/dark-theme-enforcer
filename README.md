@@ -1,6 +1,6 @@
 # Dark Theme Enforcer
 
-A Chrome Manifest V3 browser extension that transforms light-themed web pages into dark mode with a single click. The extension intelligently analyzes page colors and applies dark-appropriate transformations while maintaining readability and visual hierarchy.
+A browser extension that transforms light-themed web pages into dark mode with a single click. The extension intelligently analyzes page colors and applies dark-appropriate transformations while maintaining readability and visual hierarchy.
 
 ## Features
 
