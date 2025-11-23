@@ -1,20 +1,19 @@
-// Main content script for dark theme transformation
-// Analyzes page colors and applies dark mode transformations
-
 (function () {
-  // Guard against double-application
-  if (window.__DMX_DARK_MODE_APPLIED__) {
-    return;
-  }
-  window.__DMX_DARK_MODE_APPLIED__ = true;
-
-  // Ensure color utilities are available
   if (!window.DarkColorUtils) {
     console.error("DarkColorUtils not found. Make sure colorUtils.js is loaded first.");
     return;
   }
 
-  // Add dark mode class to html element
+  if (window.__DMX_DARK_MODE_INSTANCE__) {
+    return;
+  }
+  window.__DMX_DARK_MODE_INSTANCE__ = true;
+
+  let processedElements = new WeakSet();
+  let mutationObserver = null;
+  let debounceTimer = null;
+  const DEBOUNCE_DELAY = 150;
+
   document.documentElement.classList.add("dmx-dark-mode");
 
   // Constants
@@ -40,18 +39,20 @@
     return style.display !== "none" && style.visibility !== "hidden";
   }
 
-  /**
-   * Process a single element's colors
-   */
   function processElement(el) {
+    if (processedElements.has(el)) {
+      return;
+    }
+
     try {
       const computedStyle = window.getComputedStyle(el);
       const tagName = el.tagName?.toLowerCase();
 
-      // Skip media elements
       if (SKIP_TAGS.has(tagName)) {
         return;
       }
+
+      processedElements.add(el);
 
       // Process background color
       const bgColorStr = computedStyle.backgroundColor;
@@ -111,61 +112,141 @@
     }
   }
 
-  /**
-   * Main processing function
-   */
-  function applyDarkMode() {
-    try {
-      // Collect all elements starting from body
-      const allElements = document.querySelectorAll("body, body *");
-      const elements = Array.from(allElements).filter(el => {
-        const tagName = el.tagName?.toLowerCase();
-        return !SKIP_TAGS.has(tagName) && isElementVisible(el);
-      });
+  function processElementsBatch(elements) {
+    const elementsToProcess = elements
+      .filter(el => !processedElements.has(el) && isElementVisible(el))
+      .slice(0, MAX_ELEMENTS_TO_PROCESS);
 
-      // Limit processing for performance
-      const elementsToProcess = elements.slice(0, MAX_ELEMENTS_TO_PROCESS);
+    if (elementsToProcess.length === 0) return;
 
-      // Process elements in chunks to keep page responsive
-      let index = 0;
-      const chunkSize = 50;
+    let index = 0;
+    const chunkSize = 50;
 
-      function processChunk() {
-        const end = Math.min(index + chunkSize, elementsToProcess.length);
-        for (let i = index; i < end; i++) {
-          processElement(elementsToProcess[i]);
-        }
-        index = end;
-
-        if (index < elementsToProcess.length) {
-          // Use requestIdleCallback if available, otherwise setTimeout
-          if (window.requestIdleCallback) {
-            requestIdleCallback(processChunk, { timeout: 100 });
-          } else {
-            setTimeout(processChunk, 10);
-          }
-        }
+    function processChunk() {
+      const end = Math.min(index + chunkSize, elementsToProcess.length);
+      for (let i = index; i < end; i++) {
+        processElement(elementsToProcess[i]);
       }
+      index = end;
 
-      // Start processing
-      if (elementsToProcess.length > 0) {
+      if (index < elementsToProcess.length) {
         if (window.requestIdleCallback) {
           requestIdleCallback(processChunk, { timeout: 100 });
         } else {
-          processChunk();
+          setTimeout(processChunk, 10);
         }
       }
+    }
+
+    if (window.requestIdleCallback) {
+      requestIdleCallback(processChunk, { timeout: 100 });
+    } else {
+      processChunk();
+    }
+  }
+
+  function applyDarkMode() {
+    try {
+      const allElements = document.querySelectorAll("body, body *");
+      const elements = Array.from(allElements).filter(el => {
+        const tagName = el.tagName?.toLowerCase();
+        return !SKIP_TAGS.has(tagName);
+      });
+      processElementsBatch(elements);
     } catch (error) {
       console.error("Error while applying dark mode:", error);
     }
   }
 
-  // Start processing after a short delay to ensure DOM is ready
+  function handleMutations(mutations) {
+    const newElements = [];
+
+    for (const mutation of mutations) {
+      if (mutation.type === "childList") {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const tagName = node.tagName?.toLowerCase();
+            if (!SKIP_TAGS.has(tagName)) {
+              newElements.push(node);
+              const descendants = node.querySelectorAll("*");
+              for (const desc of descendants) {
+                const descTagName = desc.tagName?.toLowerCase();
+                if (!SKIP_TAGS.has(descTagName)) {
+                  newElements.push(desc);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (newElements.length > 0) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        processElementsBatch(newElements);
+      }, DEBOUNCE_DELAY);
+    }
+  }
+
+  function startObserver() {
+    if (mutationObserver || !document.body) {
+      return;
+    }
+
+    mutationObserver = new MutationObserver(handleMutations);
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function stopObserver() {
+    if (mutationObserver) {
+      mutationObserver.disconnect();
+      mutationObserver = null;
+    }
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
+  }
+
+  function disableDarkMode() {
+    document.documentElement.classList.remove("dmx-dark-mode");
+    stopObserver();
+    processedElements = new WeakSet();
+    const allElements = document.querySelectorAll("body, body *");
+    for (const el of allElements) {
+      if (el.style.backgroundColor) {
+        el.style.backgroundColor = "";
+      }
+      if (el.style.color) {
+        el.style.color = "";
+      }
+    }
+    window.__DMX_DARK_MODE_INSTANCE__ = false;
+  }
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "disable") {
+      disableDarkMode();
+      sendResponse({ success: true });
+    }
+  });
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", applyDarkMode);
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        applyDarkMode();
+        startObserver();
+      }, 100);
+    });
   } else {
-    // Use setTimeout to allow CSS injection to complete first
-    setTimeout(applyDarkMode, 100);
+    setTimeout(() => {
+      applyDarkMode();
+      startObserver();
+    }, 100);
   }
 })();
 

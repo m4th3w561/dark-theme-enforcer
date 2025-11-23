@@ -4,11 +4,13 @@ A browser extension that transforms light-themed web pages into dark mode with a
 
 ## Features
 
-- 🎨 **One-Click Activation** - Transform any webpage to dark mode instantly via toolbar icon
+- 🎨 **One-Click Toggle** - Transform any webpage to dark mode instantly via toolbar icon, click again to disable
+- 🔄 **Dynamic Content Support** - Automatically processes React, Vue, and other dynamically mounted components
 - 🧠 **Intelligent Color Analysis** - Automatically detects light backgrounds and text colors
 - 📊 **WCAG Compliant** - Ensures proper contrast ratios for accessibility
 - 🖼️ **Media Safe** - Preserves images, videos, and media content (no inversion)
-- ⚡ **Performance Optimized** - Processes elements in chunks to keep pages responsive
+- ⚡ **Performance Optimized** - Processes elements in chunks with debounced observers to keep pages responsive
+- 💾 **State Persistence** - Remembers your preference across page navigations
 - 🌐 **Universal Compatibility** - Works across diverse websites without breaking layouts
 - 🚀 **Zero Dependencies** - Pure JavaScript implementation, no build tools required
 
@@ -26,9 +28,11 @@ A browser extension that transforms light-themed web pages into dark mode with a
 ## Usage
 
 1. Navigate to any website with a light theme
-2. Click the extension icon in your Chrome toolbar
+2. Click the extension icon in your Chrome toolbar to enable dark mode
 3. The page will automatically transform to dark mode
-4. The transformation is applied once per page load (prevents double-application)
+4. New components that load dynamically (React, Vue, etc.) will be automatically processed
+5. Click the extension icon again to disable dark mode and restore the original theme
+6. Your preference is remembered when navigating to new pages on the same tab
 
 ## How It Works
 
@@ -38,7 +42,9 @@ The extension consists of four main components:
 
 1. **Background Service Worker** (`src/background.js`)
    - Listens for toolbar icon clicks
+   - Manages dark mode state per tab using Chrome storage
    - Injects CSS and scripts into the active tab
+   - Handles tab navigation and cleanup
 
 2. **Color Utilities** (`src/content/colorUtils.js`)
    - Parses and converts color formats (RGB, hex, named colors)
@@ -49,12 +55,23 @@ The extension consists of four main components:
    - Analyzes DOM elements for color properties
    - Identifies light-themed elements
    - Applies dark mode transformations
+   - Uses MutationObserver to watch for dynamically added elements
+   - Tracks processed elements with WeakSet for efficient duplicate prevention
    - Ensures WCAG contrast compliance
 
 4. **Base Dark Theme CSS** (`src/content/darkTheme.css`)
    - Provides foundational dark theme styles
    - Sets default dark backgrounds and light text
    - Styles common elements (links, forms, tables, etc.)
+
+### Dynamic Content Processing
+
+The extension uses a MutationObserver to automatically process new DOM elements:
+
+- **Real-time Monitoring**: Watches for new elements added to the DOM subtree
+- **Automatic Processing**: Newly mounted React, Vue, or other framework components are automatically transformed
+- **Debounced Batching**: Groups multiple DOM changes together (150ms delay) for efficient processing
+- **Duplicate Prevention**: Uses WeakSet to track processed elements, preventing unnecessary reprocessing
 
 ### Color Transformation Logic
 
@@ -69,7 +86,9 @@ The extension uses advanced color algorithms:
 
 - Processes up to 3,000 elements per page
 - Uses chunked processing (50 elements per chunk)
+- Debounces MutationObserver callbacks (150ms) to batch process new elements
 - Leverages `requestIdleCallback` when available for non-blocking execution
+- Uses WeakSet for O(1) processed element tracking (automatic garbage collection)
 - Skips non-visual and media elements for efficiency
 
 ## Project Structure
@@ -105,6 +124,7 @@ dark-theme-enforcer/
 - `scripting` - Inject CSS and JavaScript into pages
 - `activeTab` - Access the currently active tab
 - `tabs` - Query tab information
+- `storage` - Persist dark mode state per tab
 - `host_permissions` - Access all HTTP/HTTPS websites
 
 ### Color Processing
@@ -121,10 +141,9 @@ Text colors are automatically adjusted to ensure:
 
 ## Limitations
 
-- Transformation is applied once per page load (no toggle mechanism)
-- Some dynamically loaded content may not be transformed
 - Complex CSS frameworks may require additional styling
 - Pages with heavy use of inline styles may need manual adjustments
+- Very rapid DOM mutations may experience slight processing delays due to debouncing
 
 ## Development
 

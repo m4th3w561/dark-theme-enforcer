@@ -13,7 +13,8 @@
   "permissions": [
     "scripting",
     "activeTab",
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "host_permissions": [
     "http://*/*",
