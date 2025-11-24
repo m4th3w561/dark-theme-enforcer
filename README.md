@@ -158,6 +158,7 @@ Text colors are automatically adjusted to ensure:
 2. Test on various websites with light themes
 3. Verify contrast and readability
 4. Check that images and media are not inverted
+5. If there are bugs or errors, create issues and I'll get back to it
 
 ## License
 
@@ -170,4 +171,3 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 ## Acknowledgments
 
 Built with Chrome Extension APIs and WCAG accessibility guidelines.
-# dark-theme-enforcer
